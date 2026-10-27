@@ -1,33 +1,26 @@
 package tn.esprit.autoloc.service;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.domain.Maintenance;
-import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IMaintenanceRepository;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class MaintenanceServiceImpl implements IMaintenanceService {
 
     private final IMaintenanceRepository maintenanceRepository;
 
     @Override
     public Maintenance create(Maintenance maintenance) {
-        if (maintenance.getIdMaintenance() != null) {
-            throw new IllegalArgumentException(
-                    "Un nouvel élément (Maintenance) ne doit pas avoir d'identifiant");
-        }
-        valider(maintenance);
         return maintenanceRepository.save(maintenance);
     }
 
     @Override
     public Maintenance findById(Long id) {
-        return maintenanceRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Maintenance", id));
+        return maintenanceRepository.findById(id).get();
     }
 
     @Override
@@ -37,28 +30,11 @@ public class MaintenanceServiceImpl implements IMaintenanceService {
 
     @Override
     public Maintenance update(Long id, Maintenance maintenance) {
-        Maintenance existant = findById(id);
-        valider(maintenance);
-        existant.setDateDebut(maintenance.getDateDebut());
-        existant.setDateFin(maintenance.getDateFin());
-        existant.setDescription(maintenance.getDescription());
-        return maintenanceRepository.save(existant);
+        return maintenanceRepository.save(maintenance);
     }
 
     @Override
     public void deleteById(Long id) {
-        if (!maintenanceRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Maintenance", id);
-        }
         maintenanceRepository.deleteById(id);
-    }
-
-    private void valider(Maintenance maintenance) {
-        if (maintenance.getDateDebut() == null) {
-            throw new IllegalArgumentException("La date de début est obligatoire");
-        }
-        if (maintenance.getDateFin() != null && maintenance.getDateFin().isBefore(maintenance.getDateDebut())) {
-            throw new IllegalArgumentException("La date de fin ne peut pas être antérieure à la date de début");
-        }
     }
 }
